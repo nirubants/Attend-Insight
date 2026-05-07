@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AttendInsight - Academic Analytics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div id="app">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>AttendInsight</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item active" data-role="faculty" onclick="switchToRole('faculty')">
+                        <i class="fas fa-chalkboard-teacher"></i> Faculty Dashboard
+                    </li>
+                    <li class="nav-item" data-role="advisor" onclick="switchToRole('advisor')">
+                        <i class="fas fa-user-friends"></i> Advisor Dashboard
+                    </li>
+                    <li class="nav-item" data-role="admin" onclick="switchToRole('admin')">
+                        <i class="fas fa-university"></i> Admin Console
+                    </li>
+                    <li class="nav-item" data-role="it-admin" onclick="switchToRole('it-admin')">
+                        <i class="fas fa-server"></i> IT Admin
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <span id="current-role-title">Faculty Dashboard</span>
+                </div>
+                <div class="header-right">
+                    <div class="notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="profile-menu">
+                        <img src="https://ui-avatars.com/api/?name=John+Doe&background=0D8ABC&color=fff" alt="Profile"
+                            class="avatar">
+                        <span>John Doe</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Containers -->
+
+            <!-- FACULTY DASHBOARD -->
+            <div id="faculty-view" class="dashboard-view active">
+                <div class="overview-cards">
+                    <div class="card">
+                        <h3>Engagement Index</h3>
+                        <div class="metric">87 <span>/ 100</span></div>
+                        <div class="trend success"><i class="fas fa-arrow-up"></i> 4% vs last week</div>
+                    </div>
+                    <div class="card">
+                        <h3>High Risk Students</h3>
+                        <div class="metric">12</div>
+                        <div class="trend danger"><i class="fas fa-arrow-up"></i> 2 new this week</div>
+                    </div>
+                    <div class="card">
+                        <h3>Average Attendance</h3>
+                        <div class="metric">92%</div>
+                        <div class="trend neutral">Steady</div>
+                    </div>
+                    <div class="card alert-card">
+                        <h3>Live Session Details</h3>
+                        <div class="session-info">
+                            <button class="btn btn-primary btn-sm" onclick="generateQR()">Start Session (QR)</button>
+                            <div class="otp-box">OTP: <span id="session-otp">----</span></div>
+                            <div class="live-counter">Live Submissions: <span id="live-count">0</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="card chart-container">
+                        <h3>Attendance & Engagement Trend</h3>
+                        <canvas id="facultyTrendChart"></canvas>
+                    </div>
+                    <div class="card alert-panel">
+                        <h3>Real-time Alerts</h3>
+                        <ul class="alert-list">
+                            <li class="alert-item high-risk">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <div>
+                                    <strong>Sarah Jenkins</strong> sudden attendance drop (3 consecutive absences).
+                                </div>
+                            </li>
+                            <li class="alert-item moderate-risk">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div>
+                                    Engagement anomaly detected for <strong>Group B</strong>.
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card full-width">
+                    <h3>Student Roster & Risk Management</h3>
+                    <div class="table-controls">
+                        <input type="text" placeholder="Search students..." class="form-control search-input">
+                        <select class="form-control">
+                            <option>All Risk Levels</option>
+                            <option>High Risk</option>
+                            <option>Moderate Risk</option>
+                            <option>Low Risk</option>
+                        </select>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Attendance %</th>
+                                <th>Engagement Score</th>
+                                <th>Risk Level</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="faculty-student-list">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ADVISOR DASHBOARD -->
+            <div id="advisor-view" class="dashboard-view" style="display: none;">
+                <div class="overview-cards">
+                    <div class="card">
+                        <h3>Total At-Risk Students</h3>
+                        <div class="metric">45</div>
+                        <div class="trend danger"><i class="fas fa-arrow-up"></i> 5% vs last month</div>
+                    </div>
+                    <div class="card">
+                        <h3>Open Interventions</h3>
+                        <div class="metric">18</div>
+                    </div>
+                    <div class="card">
+                        <h3>Resolved Cases</h3>
+                        <div class="metric">112</div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="card chart-container">
+                        <h3>Intervention Success Tracking</h3>
+                        <canvas id="advisorInterventionChart"></canvas>
+                    </div>
+                    <div class="card alert-panel">
+                        <h3>High Priority Alerts</h3>
+                        <ul class="alert-list">
+                            <li class="alert-item high-risk">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <div>
+                                    <strong>Michael Chen</strong> missing assignments and low attendance across 3
+                                    courses.
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card full-width">
+                    <div class="flex-heading">
+                        <h3>Consolidated At-Risk Roster</h3>
+                        <button class="btn btn-primary" onclick="openInterventionModal()">Log New Intervention</button>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Risk Prob.</th>
+                                <th>Flagged Courses</th>
+                                <th>Status</th>
+                                <th>Follow-up Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="advisor-student-list">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+...
+    <!-- Student Profile Modal -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px; border-radius: 16px; padding: 30px;">
+            <span class="close-btn" onclick="closeProfileModal()" style="font-size: 24px;">&times;</span>
+            
+            <div style="text-align:center; margin-bottom:25px;">
+                <div style="width: 80px; height: 80px; margin: 0 auto 15px; background: linear-gradient(135deg, #0F4C81, #2FA4B1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: bold; box-shadow: 0 4px 12px rgba(15, 76, 129, 0.2);">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h2 id="profile-name" style="margin: 0; color: #1e293b; font-size: 24px;">Student Name</h2>
+                <p id="profile-email" style="margin: 5px 0 0; color: #64748b; font-size: 14px;">student@univ.edu</p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+                <div class="card" style="padding: 15px; text-align: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
+                    <h4 style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Engagement Index</h4>
+                    <div id="profile-engagement" style="font-size: 20px; font-weight: 700; color: #0F4C81;">0 / 100</div>
+                </div>
+                <div class="card" style="padding: 15px; text-align: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
+                    <h4 style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Avg Attendance</h4>
+                    <div id="profile-attendance" style="font-size: 20px; font-weight: 700; color: #2FA4B1;">0%</div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 15px; background: #f1f5f9; padding: 20px; border-radius: 12px;">
+                <div>
+                    <label style="font-size: 12px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Department</label>
+                    <div id="profile-dept" style="color: #1e293b; font-weight: 500;">N/A</div>
+                </div>
+                <div style="height: 1px; background: #e2e8f0;"></div>
+                <div>
+                    <label style="font-size: 12px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Academic Status</label>
+                    <div id="profile-status" style="color: #1e293b; font-weight: 500;">Active</div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary block-btn" style="width:100%; margin-top: 25px; padding: 12px; border-radius: 8px; font-weight: 600;" onclick="closeProfileModal()">Close Profile</button>
+        </div>
+    </div>
+
+            <!-- ADMIN DASHBOARD -->
+            <div id="admin-view" class="dashboard-view" style="display: none;">
+                <div class="overview-cards">
+                    <div class="card">
+                        <h3>Institutional Average Engagement</h3>
+                        <div class="metric">82 <span>/ 100</span></div>
+                        <div class="trend success"><i class="fas fa-arrow-up"></i> 1.2% vs last semester</div>
+                    </div>
+                    <div class="card">
+                        <h3>Attendance Compliance</h3>
+                        <div class="metric">94%</div>
+                    </div>
+                    <div class="card">
+                        <h3>Predictive Retention Impact</h3>
+                        <div class="metric">+4.5%</div>
+                        <div class="trend success">Estimated uplift</div>
+                    </div>
+                    <div class="card">
+                        <h3>Action Hub</h3>
+                        <div class="action-buttons" style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
+                            <button class="btn btn-outline btn-sm">Export PDF Summary</button>
+                            <button class="btn btn-outline btn-sm">Config Risk Thresholds</button>
+                            <button class="btn btn-outline btn-sm">Manage Attendance Policy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="card chart-container full-width">
+                        <h3>Institutional Heatmap (Department Engagement)</h3>
+                        <canvas id="adminHeatmapChart" style="max-height: 250px;"></canvas>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="card chart-container">
+                        <h3>Semester-wise Trend Analysis</h3>
+                        <canvas id="adminTrendChart"></canvas>
+                    </div>
+                    <div class="card chart-container">
+                        <h3>Department Comparison</h3>
+                        <canvas id="adminDeptChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IT ADMIN DASHBOARD -->
+            <div id="it-admin-view" class="dashboard-view" style="display: none;">
+                <div class="overview-cards">
+                    <div class="card">
+                        <h3>System Uptime</h3>
+                        <div class="metric">99.98%</div>
+                    </div>
+                    <div class="card">
+                        <h3>Active Sessions</h3>
+                        <div class="metric">1,402</div>
+                    </div>
+                    <div class="card">
+                        <h3>Last Sync (LMS)</h3>
+                        <div class="metric">15 mins ago</div>
+                        <div class="trend success">Successful</div>
+                    </div>
+                    <div class="card">
+                        <h3>Quick Actions</h3>
+                        <button id="btn-manual-sync" class="btn btn-primary btn-sm block-btn">Trigger Manual Sync</button>
+                        <button id="btn-manage-policy" class="btn btn-outline btn-sm block-btn" style="margin-top:10px;">Manage Attendance Policy</button>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="card full-width">
+                        <h3>User & Role Management (RBAC)</h3>
+                        <div class="table-controls">
+                            <input type="text" placeholder="Search users by name, email or role..."
+                                class="form-control search-input">
+                            <button class="btn btn-primary">Add New User</button>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>MFA Target</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itadmin-user-list">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="card">
+                        <h3>Sync Progress</h3>
+                        <div class="progress-container">
+                            <div class="progress-bar-wrap">
+                                <div class="progress-bar" style="width: 100%;"></div>
+                            </div>
+                            <small>Completed: Syncing Canvas LMS to Data Warehouse</small>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <label>Next Scheduled Sync:</label>
+                            <strong>12:00 AM EST</strong>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Security & API Configuration</h3>
+                        <ul class="security-list">
+                            <li>
+                                <span>Enforce MFA for all Faculty</span>
+                                <label class="switch"><input type="checkbox" checked><span
+                                        class="slider round"></span></label>
+                            </li>
+                            <li>
+                                <span>Session Timeout (Mins)</span>
+                                <input type="number" class="form-control" style="width:80px" value="30">
+                            </li>
+                            <li>
+                                <span>API Auth Mechanism</span>
+                                <select class="form-control">
+                                    <option>JWT Tokens</option>
+                                    <option>OAuth2</option>
+                                </select>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Intervention Modal (Advisor) -->
+    <div id="intervention-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeInterventionModal()">&times;</span>
+            <h2>Log New Intervention</h2>
+            <div class="form-group">
+                <label>Student</label>
+                <select class="form-control">
+                    <option>Michael Chen</option>
+                    <option>Sarah Jenkins</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Intervention Type</label>
+                <select class="form-control">
+                    <option>Meeting</option>
+                    <option>Email</option>
+                    <option>Call</option>
+                    <option>Academic Support</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea class="form-control" rows="4" placeholder="Enter intervention details..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Follow-up Date</label>
+                <input type="date" class="form-control">
+            </div>
+            <button class="btn btn-primary" onclick="closeInterventionModal()">Save Intervention</button>
+        </div>
+    </div>
+
+    <!-- QR Code Modal (Faculty) -->
+    <div id="qr-modal" class="modal">
+        <div class="modal-content text-center">
+            <span class="close-btn" onclick="closeQRModal()">&times;</span>
+            <h2>Session Attendance</h2>
+            <p>Scan to mark attendance for CS101</p>
+            <div class="qr-placeholder">
+                <i class="fas fa-qrcode" style="font-size: 100px; color: #0f4c81;"></i>
+            </div>
+            <br>
+            <div class="otp-box" style="font-size: 24px; display: inline-block;">OTP: <span id="modal-otp">7342</span>
+            </div>
+            <p style="color: #666; font-size: 14px; margin-top: 10px;">Expires in 04:59</p>
+        </div>
+    </div>
+
+    <!-- Policy Management Modal -->
+    <div id="policy-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px; border-radius: 12px; padding: 25px;">
+            <span class="close-btn" onclick="closePolicyModal()">&times;</span>
+            <h2 style="margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Manage Attendance Policy</h2>
+            
+            <div class="form-group">
+                <label>Minimum Sessions Required</label>
+                <input type="number" id="policy-min-sessions" class="form-control" min="1" placeholder="e.g., 3">
+                <small style="color:#64748b;">Minimum sessions before a student is evaluated for risk.</small>
+            </div>
+            
+            <div class="form-group">
+                <label>Active Sync Strategy</label>
+                <select id="policy-strategy" class="form-control">
+                    <option value="Daily Roll-up">Daily Roll-up</option>
+                    <option value="Real-time">Real-time</option>
+                    <option value="Weekly Batch">Weekly Batch</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Sync Interval (Hours)</label>
+                <input type="number" id="policy-sync-interval" class="form-control" min="1" placeholder="e.g., 6">
+            </div>
+            
+            <div class="form-group">
+                <label>Data Retention (Years)</label>
+                <input type="number" id="policy-data-retention" class="form-control" min="1" placeholder="e.g., 4">
+            </div>
+            
+            <button class="btn btn-primary block-btn" style="margin-top: 15px;" onclick="savePolicySettings()">Save Policy</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

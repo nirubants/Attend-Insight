@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AttendInsight - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        // Redirect if not logged in as the specific role
+        if (sessionStorage.getItem('attendinsight_role') !== 'admin') {
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <aside class="sidebar" id="main-sidebar">
+            <div class="sidebar-header">
+                <h2>AttendInsight</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <a href="admin.html" class="nav-item active"><i class="fas fa-university"></i> Admin Console</a>
+                    <a href="#" onclick="logout(); return false;" class="nav-item"
+                        style="margin-top:20px; color:#ef4444;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <span id="current-role-title">Institutional Analytics Console</span>
+                </div>
+                <div class="header-right">
+                    <div class="notifications"><i class="fas fa-bell"></i><span class="badge">2</span></div>
+                    <div class="profile-menu">
+                        <img src="https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff" alt="Profile"
+                            class="avatar">
+                        <span>Admin</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-view" style="display:block;">
+                <div class="overview-cards">
+                    <div class="card" id="admin-engagement-card">
+                        <h3>Institutional Average Engagement</h3>
+                        <div class="metric"><span id="admin-avg-engagement">82</span> <span>/ 100</span></div>
+                        <div class="trend success"><i class="fas fa-arrow-up"></i> 1.2% vs last semester</div>
+                    </div>
+                    <div class="card" id="admin-attendance-card">
+                        <h3>Attendance Compliance</h3>
+                        <div class="metric"><span id="admin-attendance-rate">94</span>%</div>
+                    </div>
+                    <div class="card" id="admin-retention-card">
+                        <h3>Predictive Retention Impact</h3>
+                        <div class="metric" id="admin-retention-impact">+4.5%</div>
+                        <div class="trend success">Estimated uplift</div>
+                    </div>
+                    <div class="card action-hub">
+                        <h3>Action Hub</h3>
+                        <div style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
+                            <button class="btn btn-outline btn-sm">Export PDF Summary</button>
+                            <button class="btn btn-outline btn-sm">Config Risk Thresholds</button>
+                            <button class="btn btn-outline btn-sm">Log Intervention</button>
+                            <button class="btn btn-outline btn-sm">Manage Attendance Policy</button>
+                            <button class="btn btn-outline btn-sm">Send alerts</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="card chart-container full-width" style="height:260px;">
+                        <h3>Institutional Heatmap (Department Engagement)</h3>
+                        <canvas id="adminHeatmapChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="card chart-container">
+                        <h3>Semester-wise Trend Analysis</h3>
+                        <canvas id="adminTrendChart"></canvas>
+                    </div>
+                    <div class="card chart-container">
+                        <h3>Department Comparison</h3>
+                        <canvas id="adminDeptChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- NEW: Student Management Section -->
+                <div class="card" style="margin-top:20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h3>Student Management</h3>
+                        <button class="btn btn-primary" onclick="openCreateStudentModal()">
+                            <i class="fas fa-plus"></i> Add New Student
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-student-list-body">
+                                <tr><td colspan="5" style="text-align:center;">Loading students...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- NEW: Course Management Section -->
+                <div class="card" style="margin-top:20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h3>Course Management</h3>
+                        <button class="btn btn-primary" onclick="openCreateCourseModal()">
+                            <i class="fas fa-plus"></i> Add New Course
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Faculty</th>
+                                    <th>Department</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-course-list-body">
+                                <tr><td colspan="5" style="text-align:center;">Loading courses...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create/Edit Course Modal -->
+    <div id="course-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeCourseModal()">&times;</span>
+            <h2 id="course-modal-title">Add New Course</h2>
+            <form id="course-form" style="margin-top:15px;">
+                <input type="hidden" id="course-id">
+                <div class="form-group">
+                    <label>Course Code</label>
+                    <input type="text" id="course-code" class="form-control" required placeholder="CS101">
+                </div>
+                <div class="form-group">
+                    <label>Course Name</label>
+                    <input type="text" id="course-name" class="form-control" required placeholder="Intro to CS">
+                </div>
+                <div class="form-group">
+                    <label>Assigned Faculty</label>
+                    <select id="course-faculty" class="form-control" required>
+                        <option value="">Select Faculty...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Department</label>
+                    <select id="course-dept" class="form-control">
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Business">Business</option>
+                        <option value="Mathematics">Mathematics</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Semester</label>
+                    <input type="text" id="course-semester" class="form-control" placeholder="Fall 2026">
+                </div>
+                <button type="submit" class="btn btn-primary block-btn" style="margin-top:10px;">Save Course</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create/Edit Student Modal -->
+    <div id="student-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeStudentModal()">&times;</span>
+            <h2 id="student-modal-title">Add New Student</h2>
+            <form id="student-form" style="margin-top:15px;">
+                <input type="hidden" id="student-id">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="student-name" class="form-control" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="student-email" class="form-control" required placeholder="john@univ.edu">
+                </div>
+                <div class="form-group" id="password-group">
+                    <label>Password</label>
+                    <input type="password" id="student-password" class="form-control" placeholder="Default: password123">
+                </div>
+                <div class="form-group">
+                    <label>Department</label>
+                    <select id="student-dept" class="form-control">
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Business">Business</option>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Arts">Arts</option>
+                        <option value="Sciences">Sciences</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="student-status" class="form-control">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary block-btn" style="margin-top:10px;">Save Student</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Intervention Modal (Admin Console) -->
+    <div id="intervention-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeInterventionModal()">&times;</span>
+            <h2>Log Institutional Intervention</h2>
+            <div class="form-group" style="margin-top:10px;">
+                <label>Select Student</label>
+                <select class="form-control" id="admin-student-select">
+                    <option value="">Loading students...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Intervention Type</label>
+                <select class="form-control">
+                    <option>Meeting</option>
+                    <option>Email</option>
+                    <option>Call</option>
+                    <option>Academic Support</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Institutional Notes</label>
+                <textarea class="form-control" rows="4" placeholder="Enter intervention details..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Follow-up Date</label>
+                <input type="date" class="form-control">
+            </div>
+            <button class="btn btn-primary block-btn">Save Intervention</button>
+        </div>
+    </div>
+
+    <!-- Policy Management Modal -->
+    <div id="policy-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px; border-radius: 12px; padding: 25px;">
+            <span class="close-btn" onclick="closePolicyModal()">&times;</span>
+            <h2 style="margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Manage Attendance Policy</h2>
+            
+            <div class="form-group">
+                <label>Minimum Sessions Required</label>
+                <input type="number" id="policy-min-sessions" class="form-control" min="1" placeholder="e.g., 3">
+                <small style="color:#64748b;">Minimum sessions before a student is evaluated for risk.</small>
+            </div>
+            
+            <div class="form-group">
+                <label>Active Sync Strategy</label>
+                <select id="policy-strategy" class="form-control">
+                    <option value="Daily Roll-up">Daily Roll-up</option>
+                    <option value="Real-time">Real-time</option>
+                    <option value="Weekly Batch">Weekly Batch</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Sync Interval (Hours)</label>
+                <input type="number" id="policy-sync-interval" class="form-control" min="1" placeholder="e.g., 6">
+            </div>
+            
+            <div class="form-group">
+                <label>Data Retention (Years)</label>
+                <input type="number" id="policy-data-retention" class="form-control" min="1" placeholder="e.g., 4">
+            </div>
+            
+            <button class="btn btn-primary block-btn" style="margin-top: 15px;" onclick="savePolicySettings()">Save Policy</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

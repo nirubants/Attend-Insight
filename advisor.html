@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AttendInsight - Advisor Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        // Redirect if not logged in as the specific role
+        if (sessionStorage.getItem('attendinsight_role') !== 'advisor') {
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <aside class="sidebar" id="main-sidebar">
+            <div class="sidebar-header">
+                <h2>AttendInsight</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <a href="advisor.html" class="nav-item active"><i class="fas fa-user-friends"></i> Advisor
+                        Dashboard</a>
+                    <a href="#" onclick="logout(); return false;" class="nav-item"
+                        style="margin-top:20px; color:#ef4444;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <span id="current-role-title">Early Intervention Dashboard</span>
+                </div>
+                <div class="header-right">
+                    <div class="notifications"><i class="fas fa-bell"></i><span class="badge">1</span></div>
+                    <div class="profile-menu">
+                        <img src="https://ui-avatars.com/api/?name=Jane+Doe&background=0D8ABC&color=fff" alt="Profile"
+                            class="avatar">
+                        <span>Jane Doe</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-view" style="display:block;">
+                <div class="overview-cards">
+                    <div class="card">
+                        <h3>Engagement Index</h3>
+                        <div class="metric">87 <span>/ 100</span></div>
+                        <div class="trend success"><i class="fas fa-arrow-up"></i> 4% vs last week</div>
+                    </div>
+                    <div class="card">
+                        <h3>Total At-Risk Students</h3>
+                        <div class="metric">45</div>
+                        <div class="trend danger"><i class="fas fa-arrow-up"></i> 5% vs last month</div>
+                    </div>
+                    <div class="card">
+                        <h3>Open Interventions</h3>
+                        <div class="metric">18</div>
+                    </div>
+                    <div class="card">
+                        <h3>Resolved Cases</h3>
+                        <div class="metric">112</div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="card chart-container">
+                        <h3>Intervention Success Tracking</h3>
+                        <canvas id="advisorInterventionChart"></canvas>
+                    </div>
+                    <div class="card alert-panel">
+                        <h3>High Priority Alerts</h3>
+                        <ul class="alert-list">
+                            <li class="alert-item high-risk">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <div><strong>Michael Chen</strong> missing assignments and low attendance across 3
+                                    courses.</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card full-width">
+                    <div class="flex-heading">
+                        <h3>Consolidated At-Risk Roster</h3>
+                        <button class="btn btn-primary" onclick="openInterventionModal()">Log New Intervention</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Risk Prob.</th>
+                                    <th>Flagged Courses</th>
+                                    <th>Status</th>
+                                    <th>Follow-up Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="advisor-student-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Intervention Modal (Advisor) -->
+    <div id="intervention-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeInterventionModal()">&times;</span>
+            <h2>Log New Intervention</h2>
+            <div class="form-group" style="margin-top:10px;">
+                <label>Student</label>
+                <select class="form-control">
+                    <option>Michael Chen</option>
+                    <option>Sarah Jenkins</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Intervention Type</label>
+                <select class="form-control">
+                    <option>Meeting</option>
+                    <option>Email</option>
+                    <option>Call</option>
+                    <option>Academic Support</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea class="form-control" rows="4" placeholder="Enter intervention details..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Follow-up Date</label>
+                <input type="date" class="form-control">
+            </div>
+            <button class="btn btn-primary block-btn" onclick="closeInterventionModal()">Save Intervention</button>
+        </div>
+    </div>
+
+    <!-- Student Profile Modal (Advisor) -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px; border-radius: 16px; padding: 30px;">
+            <span class="close-btn" onclick="closeProfileModal()" style="font-size: 24px;">&times;</span>
+            
+            <div style="text-align:center; margin-bottom:25px;">
+                <div style="width: 80px; height: 80px; margin: 0 auto 15px; background: linear-gradient(135deg, #0F4C81, #2FA4B1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: bold; box-shadow: 0 4px 12px rgba(15, 76, 129, 0.2);">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h2 id="profile-name" style="margin: 0; color: #1e293b; font-size: 24px;">Student Name</h2>
+                <p id="profile-email" style="margin: 5px 0 0; color: #64748b; font-size: 14px;">student@univ.edu</p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+                <div class="card" style="padding: 15px; text-align: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
+                    <h4 style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Engagement Index</h4>
+                    <div id="profile-engagement" style="font-size: 20px; font-weight: 700; color: #0F4C81;">0 / 100</div>
+                </div>
+                <div class="card" style="padding: 15px; text-align: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
+                    <h4 style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Avg Attendance</h4>
+                    <div id="profile-attendance" style="font-size: 20px; font-weight: 700; color: #2FA4B1;">0%</div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 15px; background: #f1f5f9; padding: 20px; border-radius: 12px;">
+                <div>
+                    <label style="font-size: 12px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Department</label>
+                    <div id="profile-dept" style="color: #1e293b; font-weight: 500;">N/A</div>
+                </div>
+                <div style="height: 1px; background: #e2e8f0;"></div>
+                <div>
+                    <label style="font-size: 12px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Academic Status</label>
+                    <div id="profile-status" style="color: #1e293b; font-weight: 500;">Active</div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary block-btn" style="margin-top: 25px; padding: 12px; border-radius: 8px; font-weight: 600;" onclick="closeProfileModal()">Close Profile</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

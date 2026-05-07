@@ -1,0 +1,9 @@
+node_modules/
+.env
+*.db
+*.db-shm
+*.db-wal
+cookies.txt
+scratch/
+login.json
+.DS_Store

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AttendInsight - IT Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        // Redirect if not logged in as the specific role
+        if (sessionStorage.getItem('attendinsight_role') !== 'itadmin') {
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <aside class="sidebar" id="main-sidebar">
+            <div class="sidebar-header">
+                <h2>AttendInsight</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <a href="itadmin.html" class="nav-item active"><i class="fas fa-server"></i> IT Admin</a>
+                    <a href="#" onclick="logout(); return false;" class="nav-item"
+                        style="margin-top:20px; color:#ef4444;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <span id="current-role-title">Technical Administration</span>
+                </div>
+                <div class="header-right">
+                    <div class="notifications"><i class="fas fa-bell"></i><span class="badge">0</span></div>
+                    <div class="profile-menu">
+                        <img src="https://ui-avatars.com/api/?name=Sys+Admin&background=0D8ABC&color=fff" alt="Profile"
+                            class="avatar">
+                        <span>SysAdmin</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-view" style="display:block;">
+                <div class="overview-cards">
+                    <div class="card">
+                        <h3>System Uptime</h3>
+                        <div class="metric">99.98%</div>
+                    </div>
+                    <div class="card">
+                        <h3>Active Sessions</h3>
+                        <div class="metric">1,402</div>
+                    </div>
+                    <div class="card">
+                        <h3>Last Sync (LMS)</h3>
+                        <div class="metric">15 mins ago</div>
+                        <div class="trend success">Successful</div>
+                    </div>
+                    <div class="card itadmin-actions-card">
+                        <h3>Quick Actions</h3>
+                        <button id="btn-manual-sync" class="btn btn-primary block-btn" style="margin-top:15px;">Trigger Manual Sync</button>
+                        <button id="btn-gen-report" class="btn btn-outline block-btn" style="margin-top:10px;">Generate Attendance
+                            Report</button>
+                        <button id="btn-manage-policy" class="btn btn-outline block-btn" style="margin-top:10px;">Manage Attendance
+                            Policy</button>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="card full-width">
+                        <h3>User & Role Management (RBAC)</h3>
+                        <div class="table-controls">
+                            <input type="text" placeholder="Search users by name, email or role..."
+                                class="form-control search-input">
+                            <button id="btn-add-user" class="btn btn-primary">Add New User</button>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>MFA Target</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itadmin-user-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="card" style="grid-column: 1 / 2;">
+                        <h3>Sync Progress</h3>
+                        <div class="progress-container">
+                            <div class="progress-bar-wrap">
+                                <div class="progress-bar" style="width: 100%;"></div>
+                            </div>
+                            <small>Completed: Syncing Canvas LMS to Data Warehouse</small>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <label>Next Scheduled Sync:</label>
+                            <strong>12:00 AM EST</strong>
+                        </div>
+                    </div>
+                    <div class="card" style="grid-column: 2 / 3;">
+                        <h3>Security & API Configuration</h3>
+                        <ul class="security-list">
+                            <li>
+                                <span>Enforce MFA for all Faculty</span>
+                                <label class="switch"><input type="checkbox" checked><span
+                                        class="slider round"></span></label>
+                            </li>
+                            <li>
+                                <span>Session Timeout (Mins)</span>
+                                <input type="number" class="form-control" style="width:80px" value="30">
+                            </li>
+                            <li>
+                                <span>API Auth Mechanism</span>
+                                <select class="form-control">
+                                    <option>JWT Tokens</option>
+                                    <option>OAuth2</option>
+                                </select>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- User Management Modal -->
+    <div id="user-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeUserModal()">&times;</span>
+            <h2 id="user-modal-title" style="margin-bottom: 24px; color: var(--primary-blue);">Add New User</h2>
+            <form id="user-form">
+                <input type="hidden" id="manage-user-id">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="manage-user-name" class="form-control" placeholder="Enter full name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="manage-user-email" class="form-control" placeholder="email@univ.edu" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="manage-user-role" class="form-control" required>
+                        <option value="student">Student</option>
+                        <option value="faculty">Faculty</option>
+                        <option value="advisor">Advisor</option>
+                        <option value="admin">Admin</option>
+                        <option value="itadmin">IT Admin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Account Status</label>
+                    <select id="manage-user-status" class="form-control">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="flex-row" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                        <input type="checkbox" id="manage-user-mfa">
+                        <span>Enforce MFA for this user</span>
+                    </label>
+                </div>
+                <div id="password-hint" style="font-size:0.8rem; color:var(--text-muted); margin-bottom:20px;">
+                    Note: New users are initialized with the default password: <strong>password123</strong>
+                </div>
+                <button type="submit" class="btn btn-primary block-btn">Save User Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Policy Management Modal -->
+    <div id="policy-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px; border-radius: 12px; padding: 25px;">
+            <span class="close-btn" onclick="closePolicyModal()">&times;</span>
+            <h2 style="margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Manage Attendance Policy</h2>
+            
+            <div class="form-group">
+                <label>Minimum Sessions Required</label>
+                <input type="number" id="policy-min-sessions" class="form-control" min="1" placeholder="e.g., 3">
+                <small style="color:#64748b;">Minimum sessions before a student is evaluated for risk.</small>
+            </div>
+            
+            <div class="form-group">
+                <label>Active Sync Strategy</label>
+                <select id="policy-strategy" class="form-control">
+                    <option value="Daily Roll-up">Daily Roll-up</option>
+                    <option value="Real-time">Real-time</option>
+                    <option value="Weekly Batch">Weekly Batch</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Sync Interval (Hours)</label>
+                <input type="number" id="policy-sync-interval" class="form-control" min="1" placeholder="e.g., 6">
+            </div>
+            
+            <div class="form-group">
+                <label>Data Retention (Years)</label>
+                <input type="number" id="policy-data-retention" class="form-control" min="1" placeholder="e.g., 4">
+            </div>
+            
+            <button class="btn btn-primary block-btn" style="margin-top: 15px;" onclick="savePolicySettings()">Save Policy</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

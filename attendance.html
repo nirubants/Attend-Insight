@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AttendInsight - Mark Attendance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .attendance-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0f4c81;
+            margin-bottom: 1.5rem;
+        }
+        .status-msg {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            display: none;
+        }
+        .status-success { background: #dcfce7; color: #166534; display: block; }
+        .status-error { background: #fee2e2; color: #991b1b; display: block; }
+    </style>
+</head>
+<body>
+    <div class="attendance-card">
+        <div class="logo">AttendInsight</div>
+        <h2>Mark Attendance</h2>
+        <p id="course-info" style="color: #64748b; margin-bottom: 1.5rem;">Loading course info...</p>
+        
+        <form id="attendance-form">
+            <div class="form-group" style="text-align: left;">
+                <label>Full Name</label>
+                <input type="text" id="student-name" class="form-control" placeholder="Enter your full name" required>
+            </div>
+            <div class="form-group" style="text-align: left;">
+                <label>OTP</label>
+                <input type="text" id="otp" class="form-control" placeholder="Enter 4-digit OTP" maxlength="4" required>
+            </div>
+            <button type="submit" class="btn btn-primary block-btn" style="margin-top: 1rem;">Submit Attendance</button>
+        </form>
+
+        <div id="status" class="status-msg"></div>
+    </div>
+
+    <script>
+        const API_BASE = '';
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('courseId');
+        const otpParam = urlParams.get('otp');
+
+        if (otpParam) {
+            document.getElementById('otp').value = otpParam;
+        }
+
+        if (courseId) {
+            document.getElementById('course-info').innerText = `Course ID: ${courseId}`;
+        } else {
+            document.getElementById('course-info').innerText = 'Error: No course specified.';
+            document.querySelector('button').disabled = true;
+        }
+
+        document.getElementById('attendance-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('student-name').value;
+            const otp = document.getElementById('otp').value;
+            const statusEl = document.getElementById('status');
+
+            try {
+                const res = await fetch(`${API_BASE}/api/sessions/submit-public`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, otp, courseId })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    statusEl.innerText = data.message;
+                    statusEl.className = 'status-msg status-success';
+                    document.getElementById('attendance-form').style.display = 'none';
+                } else {
+                    statusEl.innerText = data.error || 'Failed to submit attendance.';
+                    statusEl.className = 'status-msg status-error';
+                }
+            } catch (err) {
+                statusEl.innerText = 'Network error. Please try again.';
+                statusEl.className = 'status-msg status-error';
+            }
+        });
+    </script>
+</body>
+</html>

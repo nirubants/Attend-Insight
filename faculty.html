@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AttendInsight - Faculty Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        // Redirect if not logged in as the specific role
+        if (sessionStorage.getItem('attendinsight_role') !== 'faculty') {
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <aside class="sidebar" id="main-sidebar">
+            <div class="sidebar-header">
+                <h2>AttendInsight</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <a href="faculty.html" class="nav-item active"><i class="fas fa-chalkboard-teacher"></i> Faculty
+                        Dashboard</a>
+                    <a href="#" onclick="logout(); return false;" class="nav-item"
+                        style="margin-top:20px; color:#ef4444;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <span id="current-role-title">Faculty Dashboard</span>
+                </div>
+                <div class="header-right">
+                    <div class="notifications"><i class="fas fa-bell"></i><span class="badge">3</span></div>
+                    <div class="profile-menu">
+                        <img src="https://ui-avatars.com/api/?name=John+Doe&background=0D8ABC&color=fff" alt="Profile"
+                            class="avatar">
+                        <span>John Doe</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-view" style="display:block;">
+                <div class="overview-cards">
+                    <div class="card">
+                        <h3>Engagement Index</h3>
+                        <div class="metric">87 <span>/ 100</span></div>
+                        <div class="trend success"><i class="fas fa-arrow-up"></i> 4% vs last week</div>
+                    </div>
+                    <div class="card">
+                        <h3>High Risk Students</h3>
+                        <div class="metric">12</div>
+                        <div class="trend danger"><i class="fas fa-arrow-up"></i> 2 new this week</div>
+                    </div>
+                    <div class="card">
+                        <h3>Average Attendance</h3>
+                        <div class="metric">92%</div>
+                        <div class="trend neutral">Steady</div>
+                    </div>
+                    <div class="card alert-card">
+                        <h3>Live Session Details</h3>
+                        <div class="session-info">
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label style="font-size: 12px; color: #64748b;">Select Course</label>
+                                <select id="faculty-course-select" class="form-control" style="padding: 5px; height: 35px;">
+                                    <option value="all">All Courses</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary btn-sm block-btn" onclick="generateQR()">Start Session (QR)</button>
+                            <div class="otp-box">OTP: <span id="session-otp">----</span></div>
+                            <div class="live-counter">Live Submissions: <span id="live-count">0</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="card chart-container">
+                        <h3>Attendance & Engagement Trend</h3>
+                        <canvas id="facultyTrendChart"></canvas>
+                    </div>
+                    <div class="card alert-panel">
+                        <h3>Real-time Alerts</h3>
+                        <ul class="alert-list">
+                            <li class="alert-item high-risk">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <div><strong>Sarah Jenkins</strong> sudden attendance drop (3 consecutive absences).
+                                </div>
+                            </li>
+                            <li class="alert-item moderate-risk">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div>Engagement anomaly detected for <strong>Group B</strong>.</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card full-width">
+                    <h3>Student Roster & Risk Management</h3>
+                    <div class="table-controls">
+                        <input type="text" id="faculty-search" placeholder="Search students..." class="form-control search-input">
+                        <select id="faculty-risk-filter" class="form-control">
+                            <option value="All">All Risk Levels</option>
+                            <option value="High Risk">High Risk</option>
+                            <option value="Moderate Risk">Moderate Risk</option>
+                            <option value="Low Risk">Low Risk</option>
+                        </select>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Course</th>
+                                    <th>Attendance %</th>
+                                    <th>Classes Attended</th>
+                                    <th>Session Status</th>
+                                    <th>Risk Level</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="faculty-student-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content text-center">
+            <span class="close-btn" onclick="closeQRModal()">&times;</span>
+            <h2>Session Attendance</h2>
+            <p id="qr-modal-course">Scan to mark attendance</p>
+            <div id="qr-code-container" style="margin:20px 0;">
+                <img id="qr-image" src="" alt="QR Code" style="width: 200px; height: 200px; display: none;">
+                <div id="qr-loading">Generating QR Code...</div>
+            </div>
+            <div class="otp-box" style="font-size: 24px; display: inline-block;">OTP: <span id="modal-otp">----</span>
+            </div>
+            <p id="otp-expiry" style="color: #ef4444; font-size: 16px; font-weight: bold; margin-top: 10px;">Expires in 03:00</p>
+        </div>
+    </div>
+
+    <!-- Student Profile Modal (Faculty) -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px; border-radius: 16px; padding: 30px;">
+            <span class="close-btn" onclick="closeProfileModal()" style="font-size: 24px;">&times;</span>
+            
+            <div style="text-align:center; margin-bottom:25px;">
+                <div style="width: 80px; height: 80px; margin: 0 auto 15px; background: linear-gradient(135deg, #0F4C81, #2FA4B1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: bold; box-shadow: 0 4px 12px rgba(15, 76, 129, 0.2);">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h2 id="profile-name" style="margin: 0; color: #1e293b; font-size: 24px;">Student Name</h2>
+                <p id="profile-email" style="margin: 5px 0 0; color: #64748b; font-size: 14px;">student@univ.edu</p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+                <div class="card" style="padding: 15px; text-align: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
+                    <h4 style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Engagement Index</h4>
+                    <div id="profile-engagement" style="font-size: 20px; font-weight: 700; color: #0F4C81;">0 / 100</div>
+                </div>
+                <div class="card" style="padding: 15px; text-align: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
+                    <h4 style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Avg Attendance</h4>
+                    <div id="profile-attendance" style="font-size: 20px; font-weight: 700; color: #2FA4B1;">0%</div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 15px; background: #f1f5f9; padding: 20px; border-radius: 12px;">
+                <div>
+                    <label style="font-size: 12px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Department</label>
+                    <div id="profile-dept" style="color: #1e293b; font-weight: 500;">N/A</div>
+                </div>
+                <div style="height: 1px; background: #e2e8f0;"></div>
+                <div>
+                    <label style="font-size: 12px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Academic Status</label>
+                    <div id="profile-status" style="color: #1e293b; font-weight: 500;">Active</div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary block-btn" style="margin-top: 25px; padding: 12px; border-radius: 8px; font-weight: 600;" onclick="closeProfileModal()">Close Profile</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
