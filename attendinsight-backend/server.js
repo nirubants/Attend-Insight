@@ -19,6 +19,7 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'https://attend-insight-new.onrender.com',
+    'https://nirubants.github.io',
   ],
   credentials: true,
 }));

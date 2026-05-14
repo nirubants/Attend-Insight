@@ -53,7 +53,7 @@
             </div>
             <div class="form-group" style="text-align: left;">
                 <label>OTP</label>
-                <input type="text" id="otp" class="form-control" placeholder="Enter 4-digit OTP" maxlength="4" required>
+                <input type="text" id="otp" class="form-control" placeholder="Enter 6-digit OTP" maxlength="6" required>
             </div>
             <button type="submit" class="btn btn-primary block-btn" style="margin-top: 1rem;">Submit Attendance</button>
         </form>
@@ -62,7 +62,7 @@
     </div>
 
     <script>
-        const API_BASE = '';
+        const API_BASE = 'https://attend-insight-new.onrender.com';
         const urlParams = new URLSearchParams(window.location.search);
         const courseId = urlParams.get('courseId');
         const otpParam = urlParams.get('otp');
