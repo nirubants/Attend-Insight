@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AttendInsight - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .login-error {
+            color: var(--risk-high);
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <h1>AttendInsight</h1>
+            <p>Select your institutional portal to continue</p>
+            <div class="role-selector">
+                <button onclick="openLoginModal('faculty')" class="role-btn">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <span>Faculty</span>
+                </button>
+                <button onclick="openLoginModal('advisor')" class="role-btn">
+                    <i class="fas fa-user-friends"></i>
+                    <span>Advisor</span>
+                </button>
+                <button onclick="openLoginModal('admin')" class="role-btn">
+                    <i class="fas fa-university"></i>
+                    <span>Admin</span>
+                </button>
+                <button onclick="openLoginModal('itadmin')" class="role-btn">
+                    <i class="fas fa-server"></i>
+                    <span>IT Admin</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px; padding: 40px;">
+            <span class="close-btn" onclick="closeLoginModal()">&times;</span>
+            <div class="text-center" style="margin-bottom: 24px;">
+                <h2 id="modal-role-title" style="color: var(--primary-blue); font-weight: 800;">Portal Login</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Sign in to access your dashboard</p>
+            </div>
+
+            <div id="login-error" class="login-error"></div>
+
+            <form id="modal-login-form">
+                <input type="hidden" id="selected-role" value="">
+
+                <div class="form-group" style="text-align: left;">
+                    <label for="email">Institutional Email</label>
+                    <input type="email" id="email" class="form-control" placeholder="username@univ.edu" required>
+                </div>
+                <div class="form-group" style="text-align: left;">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary block-btn"
+                    style="margin-top: 15px; padding: 12px; font-size: 1rem;">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
