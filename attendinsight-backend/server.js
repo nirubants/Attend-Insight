@@ -26,15 +26,16 @@ app.use(cors({
 
   // Session configuration
   app.use(session({
-    secret: process.env.SESSION_SECRET || 'attendinsight_secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      sameSite: 'lax',
-      maxAge: 8 * 60 * 60 * 1000  // 8 hours
-    }
-  }));
+  secret: process.env.SESSION_SECRET || 'attendinsight_secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: true,        // ✅ Required for HTTPS on Render
+    sameSite: 'none',    // ✅ Required for cross-origin cookies
+    maxAge: 8 * 60 * 60 * 1000
+  }
+}));
 
   // ─── Serve Frontend Static Files ─────────────────────────────────────────────
   const frontendPath = path.join(__dirname, '..');
