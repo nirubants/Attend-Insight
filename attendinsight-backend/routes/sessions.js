@@ -29,7 +29,7 @@ router.post('/create', requireRole('faculty'), async (req, res) => {
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     
     // Create QR Code URL (pointing to the attendance page)
-    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.BASE_URL || 'https://nirubants.github.io/Attend-Insight';
     const attendanceUrl = `${baseUrl}/attendance.html?courseId=${courseId}&otp=${otp}`;
     const qrImage = await QRCode.toDataURL(attendanceUrl);
 

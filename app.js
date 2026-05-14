@@ -1,6 +1,6 @@
 // AttendInsight - Frontend API Integration
-// API base URL (backend served at localhost:3000)
-const API_BASE = '';
+// API base URL (backend served at Render)
+const API_BASE = 'https://attend-insight.onrender.com';
 
 // ─── Utility: Authenticated Fetch ────────────────────────────────────────────
 async function apiFetch(endpoint, options = {}) {
