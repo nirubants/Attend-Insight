@@ -4,17 +4,23 @@ const API_BASE = 'https://attend-insight-new.onrender.com';
 
 // ─── Utility: Authenticated Fetch ────────────────────────────────────────────
 async function apiFetch(endpoint, options = {}) {
+  const userJson = sessionStorage.getItem('attendinsight_user');
+  const user = userJson ? JSON.parse(userJson) : null;
+
   const defaults = {
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
+    headers: {
+      'Content-Type': 'application/json',
+      ...(user ? { 'x-user-id': user.id, 'x-user-role': user.role } : {}),
+      ...(options.headers || {})
+    }
   };
   const config = { ...defaults, ...options, headers: { ...defaults.headers, ...(options.headers || {}) } };
   if (config.body && typeof config.body === 'object' && !(config.body instanceof FormData)) {
     config.body = JSON.stringify(config.body);
-    config.headers['Content-Type'] = 'application/json';
   }
   if (config.body instanceof FormData) {
-    delete config.headers['Content-Type']; // Let browser set multipart boundary
+    delete config.headers['Content-Type'];
   }
   const res = await fetch(`${API_BASE}${endpoint}`, config);
   const data = await res.json().catch(() => ({}));
