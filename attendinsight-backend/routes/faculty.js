@@ -6,7 +6,7 @@ const router = express.Router();
 
 // GET /api/faculty/dashboard
 router.get('/dashboard', requireRole('faculty'), async (req, res) => {
-  const facultyId = req.session.user.id;
+  const facultyId = req.user?.id || req.session?.user?.id;
 
   try {
     // Get courses taught by this faculty
@@ -81,7 +81,7 @@ router.get('/dashboard', requireRole('faculty'), async (req, res) => {
 
 // GET /api/faculty/courses
 router.get('/courses', requireRole('faculty'), async (req, res) => {
-  const facultyId = req.session.user.id;
+  const facultyId = req.user?.id || req.session?.user?.id;
   try {
     const result = await db.query('SELECT * FROM courses WHERE faculty_id = $1 ORDER BY code ASC', [facultyId]);
     res.json({ courses: result.rows });
@@ -93,7 +93,7 @@ router.get('/courses', requireRole('faculty'), async (req, res) => {
 
 // GET /api/faculty/students?courseId=1
 router.get('/students', requireRole('faculty'), async (req, res) => {
-  const facultyId = req.session.user.id;
+  const facultyId = req.user?.id || req.session?.user?.id;
   const { courseId } = req.query;
 
   try {
@@ -133,7 +133,7 @@ router.get('/students', requireRole('faculty'), async (req, res) => {
 
 // GET /api/faculty/alerts
 router.get('/alerts', requireRole('faculty'), async (req, res) => {
-  const facultyId = req.session.user.id;
+  const facultyId = req.user?.id || req.session?.user?.id;
   try {
     const coursesResult = await db.query('SELECT id FROM courses WHERE faculty_id = $1', [facultyId]);
     const courseIds = coursesResult.rows.map(c => c.id);

@@ -112,8 +112,20 @@ router.post('/students', requireRole('admin'), async (req, res) => {
       VALUES ($1, $2, $3, 'student', $4, 'Active')
       RETURNING id, name, email, department, role
     `, [name, email.toLowerCase().trim(), hash, department || 'General']);
-    
-    res.status(201).json({ message: 'Student created successfully', student: result.rows[0] });
+
+    const newStudentId = result.rows[0].id;
+
+    // Auto-enroll the new student in ALL existing courses
+    const coursesResult = await db.query('SELECT id FROM courses');
+    for (const course of coursesResult.rows) {
+      await db.query(`
+        INSERT INTO enrollments (student_id, course_id)
+        VALUES ($1, $2)
+        ON CONFLICT DO NOTHING
+      `, [newStudentId, course.id]);
+    }
+
+    res.status(201).json({ message: 'Student created and enrolled in all courses successfully', student: result.rows[0] });
   } catch (err) {
     if (err.code === '23505') {
       return res.status(400).json({ error: 'Email already exists.' });

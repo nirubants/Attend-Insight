@@ -82,6 +82,28 @@ app.use(cors({
     res.json({ message: 'Seeded!' });
   });
 
+  // One-time utility: enroll ALL existing students in ALL existing courses
+  app.get('/api/enroll-all', async (req, res) => {
+    try {
+      const students = await db.query(`SELECT id FROM users WHERE role = 'student'`);
+      const courses = await db.query(`SELECT id FROM courses`);
+      let count = 0;
+      for (const s of students.rows) {
+        for (const c of courses.rows) {
+          const r = await db.query(
+            `INSERT INTO enrollments (student_id, course_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING id`,
+            [s.id, c.id]
+          );
+          if (r.rowCount > 0) count++;
+        }
+      }
+      res.json({ message: `Enrolled. New enrollments created: ${count}` });
+    } catch (err) {
+      console.error('Enroll-all error:', err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   return app;
 }
 
