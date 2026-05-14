@@ -1,4 +1,6 @@
 // routes/faculty.js
+// Faculty page routes
+
 const express = require('express');
 const db = require('../db');
 const { requireRole } = require('../middleware/auth');

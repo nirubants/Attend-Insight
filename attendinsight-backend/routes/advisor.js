@@ -7,14 +7,17 @@ const router = express.Router();
 // GET /api/advisor/dashboard
 router.get('/dashboard', requireRole('advisor'), async (req, res) => {
   try {
+    // Count ALL enrolled active students
+    const totalStudents = await db.query(`
+      SELECT COUNT(DISTINCT u.id) as cnt
+      FROM enrollments e
+      JOIN users u ON e.student_id = u.id
+      WHERE u.role = 'student' AND u.status = 'Active'
+    `);
+
     const totalAtRisk = await db.query(`
       SELECT COUNT(DISTINCT student_id) as cnt FROM engagement_scores
       WHERE risk_level IN ('High Risk','Moderate Risk')
-    `);
-
-    const highRisk = await db.query(`
-      SELECT COUNT(DISTINCT student_id) as cnt FROM engagement_scores
-      WHERE risk_level = 'High Risk'
     `);
 
     const openInterventions = await db.query(`
@@ -41,8 +44,8 @@ router.get('/dashboard', requireRole('advisor'), async (req, res) => {
     `);
 
     return res.json({
+      totalStudents: parseInt(totalStudents.rows[0].cnt) || 0,
       totalAtRisk: parseInt(totalAtRisk.rows[0].cnt) || 0,
-      highRisk: parseInt(highRisk.rows[0].cnt) || 0,
       openInterventions: parseInt(openInterventions.rows[0].cnt) || 0,
       resolvedCases: parseInt(resolvedCases.rows[0].cnt) || 0,
       engagementIndex: parseFloat(engagementIndex.rows[0].avg) || 0,
@@ -57,22 +60,25 @@ router.get('/dashboard', requireRole('advisor'), async (req, res) => {
 // GET /api/advisor/at-risk
 router.get('/at-risk', requireRole('advisor'), async (req, res) => {
   try {
+    // Show ALL enrolled students (not just those with engagement scores)
+    // Students with no score appear with 0% attendance and 'Low Risk'
     const students = await db.query(`
       SELECT
         u.id, u.name, u.email,
-        es.attendance_rate,
-        es.score,
-        es.risk_level,
+        COALESCE(es.attendance_rate, 0) as attendance_rate,
+        COALESCE(es.score, 0) as score,
+        COALESCE(es.risk_level, 'Low Risk') as risk_level,
         c.code as course_code,
         c.id as course_id,
         (SELECT COUNT(*) FROM interventions i WHERE i.student_id = u.id AND i.status = 'Open') as open_interventions,
         (SELECT i2.status FROM interventions i2 WHERE i2.student_id = u.id ORDER BY i2.created_at DESC LIMIT 1) as latest_status,
         (SELECT i3.follow_up_date FROM interventions i3 WHERE i3.student_id = u.id ORDER BY i3.created_at DESC LIMIT 1) as follow_up_date
-      FROM engagement_scores es
-      JOIN users u ON es.student_id = u.id
-      JOIN courses c ON es.course_id = c.id
-      WHERE es.risk_level IN ('High Risk','Moderate Risk')
-      ORDER BY es.score ASC
+      FROM enrollments e
+      JOIN users u ON e.student_id = u.id
+      JOIN courses c ON e.course_id = c.id
+      LEFT JOIN engagement_scores es ON es.student_id = u.id AND es.course_id = c.id
+      WHERE u.role = 'student' AND u.status = 'Active'
+      ORDER BY COALESCE(es.score, 100) ASC, u.name ASC
     `);
 
     return res.json({ students: students.rows });
