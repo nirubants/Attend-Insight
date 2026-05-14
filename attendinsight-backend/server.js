@@ -72,6 +72,12 @@ app.use(cors({
     res.status(500).json({ error: 'Internal server error.' });
   });
 
+  app.get('/api/seed-now', async (req, res) => {
+    const { execSync } = require('child_process');
+    execSync('node seed.js');
+    res.json({ message: 'Seeded!' });
+  });
+
   return app;
 }
 

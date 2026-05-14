@@ -8,23 +8,27 @@ const router = express.Router();
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    
+    const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = result.rows[0];
 
-    if (!user || user.password !== password) {
+    if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    const match = await bcrypt.compare(password, user.password_hash); // ✅ correct
+    if (!match) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    req.session.user = { id: user.id, name: user.name, email: user.email, role: user.role };
+
     return res.json({
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
+      user: { id: user.id, name: user.name, email: user.email, role: user.role }
     });
 
   } catch (err) {
-    console.error('Login error:', err);
+    console.error('Login error:', err.message);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
