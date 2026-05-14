@@ -41,7 +41,7 @@ router.get('/dashboard', requireRole('itadmin'), async (req, res) => {
 });
 
 // GET /api/itadmin/users
-router.get('/users', requireRole('itadmin'), async (req, res) => {
+router.get('/users', requireRole('itadmin', 'admin'), async (req, res) => {
   const { search, role } = req.query;
   try {
     let sql = `SELECT id, name, email, role, status, mfa_enabled, created_at FROM users WHERE 1=1`;
